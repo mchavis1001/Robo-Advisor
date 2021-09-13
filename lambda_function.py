@@ -1,6 +1,8 @@
 ### Required Libraries ###
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from botocore.vendored import requests
+import json
 
 
 ### Functionality Helper Functions ###
@@ -115,13 +117,14 @@ In this section, you will create an Amazon Lambda function that will validate th
 
 # YOUR CODE GOES HERE!
 def validate_data(age, investment_amount):
-    if 0 > int(age) or int(age) > 65:
-        return build_validation_result(False, 'age',
-                                       'Age has to be greater than 0.')
-
-    if int(investment_amount) < 5000:
-        return build_validation_result(False, 'investmentAmount',
-                                       'Investment amount must be equal to or greater than 5000.')
+    if age is not None:
+        if 0 > int(age) or int(age) > 65:
+            return build_validation_result(False, 'age',
+                                           'Invaild Age, Age must be between 0 and 65.')
+    if investment_amount is not None:
+        if int(investment_amount) < 5000:
+            return build_validation_result(False, 'investmentAmount',
+                                           'Investment amount must be equal to or greater than 5000.')
 
     return build_validation_result(True, None, None)
 
@@ -181,17 +184,14 @@ def recommend_portfolio(intent_request):
         # Once all slots are valid, a delegate dialog is returned to Lex to choose the next course of action.
         return delegate(output_session_attributes, get_slots(intent_request))
 
+    recommned = get_recommendation(risk_level)
+
     return close(
-        intent_request["sessionAttributes"],
-        "Fulfilled",
+        intent_request["sessionAttributes"], "Fulfilled",
         {
             "contentType": "PlainText",
-            "content": """Thank you for your information;
-            you can get {}
-            """.format(get_recommendation()
-                       ),
-        },
-    )
+            "content": f"""Thank you {first_name} for your information;
+          your recommended portfolio is {recommned}"""})
 
 
 ### Intents Dispatcher ###
